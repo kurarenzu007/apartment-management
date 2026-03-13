@@ -1,0 +1,145 @@
+.stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  animation: scaleIn 0.4s ease-out both;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(26, 158, 150, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(30%, -30%);
+  transition: var(--transition);
+}
+
+.stat-card:hover::after {
+  transform: translate(20%, -20%) scale(1.2);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+  transition: var(--transition);
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.stat-icon-teal {
+  background: rgba(26, 158, 150, 0.15);
+}
+
+.stat-card:has(.stat-icon-teal)::before {
+  background: var(--primary);
+}
+
+.stat-icon-blue {
+  background: rgba(52, 152, 219, 0.15);
+}
+
+.stat-card:has(.stat-icon-blue)::before {
+  background: #3498db;
+}
+
+.stat-icon-orange {
+  background: rgba(243, 156, 18, 0.15);
+}
+
+.stat-card:has(.stat-icon-orange)::before {
+  background: var(--warning);
+}
+
+.stat-icon-purple {
+  background: rgba(155, 89, 182, 0.15);
+}
+
+.stat-card:has(.stat-icon-purple)::before {
+  background: #9b59b6;
+}
+
+.stat-icon-green {
+  background: rgba(46, 204, 113, 0.15);
+}
+
+.stat-card:has(.stat-icon-green)::before {
+  background: var(--success);
+}
+
+.stat-icon-yellow {
+  background: rgba(241, 196, 15, 0.15);
+}
+
+.stat-card:has(.stat-icon-yellow)::before {
+  background: #f1c40f;
+}
+
+.stat-icon-red {
+  background: rgba(231, 76, 60, 0.15);
+}
+
+.stat-card:has(.stat-icon-red)::before {
+  background: var(--danger);
+}
+
+.stat-content {
+  flex: 1;
+  text-align: left;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-dark);
+  transition: var(--transition);
+}
+
+.stat-card:hover .stat-value {
+  color: var(--primary);
+  transform: scale(1.05);
+}

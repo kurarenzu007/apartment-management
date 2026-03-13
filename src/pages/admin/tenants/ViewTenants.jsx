@@ -1,0 +1,249 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Sidebar from '../../../components/layout/Sidebar';
+import Topbar from '../../../components/layout/Topbar';
+import Badge from '../../../components/ui/Badge';
+import Modal from '../../../components/ui/Modal';
+import Button from '../../../components/ui/Button';
+import { mockTenants as initialMockTenants } from '../../../data/mockData';
+import { getRemarksBadgeVariant } from '../../../utils';
+import { ROUTES } from '../../../constants';
+import './ViewTenants.css';
+
+export default function ViewTenants() {
+  const [tenants, setTenants] = useState(initialMockTenants);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showEntries, setShowEntries] = useState(3);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState('');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [selectedTenant, setSelectedTenant] = useState(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [tenantToArchive, setTenantToArchive] = useState(null);
+  const navigate = useNavigate();
+
+  const filteredTenants = tenants.filter(tenant =>
+    tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    tenant.unit.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const handleViewTenant = (tenant) => {
+    setSelectedTenant(tenant);
+    setViewModalOpen(true);
+  };
+
+  const handleEditTenant = (tenant) => {
+    alert(`Edit functionality for ${tenant.name} - Coming soon!`);
+  };
+
+  const handleArchiveTenant = (tenant) => {
+    setTenantToArchive(tenant);
+    setArchiveConfirmOpen(true);
+  };
+
+  const confirmArchive = () => {
+    setTenants(tenants.map(t =>
+      t.id === tenantToArchive.id ? { ...t, status: 'archived' } : t
+    ));
+    setArchiveConfirmOpen(false);
+    setTenantToArchive(null);
+  };
+
+  const getRemarksBadge = (remarks) => {
+    return getRemarksBadgeVariant(remarks);
+  };
+
+  return (
+    <div className="admin-layout">
+      <Sidebar />
+      <div className="main-content">
+        <Topbar title="Tenant Management" />
+        <div className="page-content">
+          <div className="breadcrumb">Home &gt; Tenants</div>
+
+          <div className="tenants-container">
+            <div className="tenants-header">
+              <div className="entries-control">
+                <label>Show</label>
+                <select value={showEntries} onChange={(e) => setShowEntries(Number(e.target.value))}>
+                  <option value={3}>3</option>
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                </select>
+                <label>entries</label>
+              </div>
+
+              <div className="header-actions">
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button className="add-tenant-btn" onClick={() => navigate(ROUTES.ADMIN_TENANTS_ADD)}>
+                  ➕ Add Tenant
+                </button>
+              </div>
+            </div>
+
+            <div className="table-wrapper">
+              <table className="tenants-table">
+                <thead>
+                  <tr>
+                    <th className="sortable" onClick={() => handleSort('username')}>
+                      Username {sortField === 'username' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th className="sortable" onClick={() => handleSort('name')}>
+                      Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                    <th>Address</th>
+                    <th>Unit</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTenants.slice(0, showEntries).map((tenant) => (
+                    <tr key={tenant.id}>
+                      <td>{tenant.username}</td>
+                      <td>{tenant.name}</td>
+                      <td>{tenant.email}</td>
+                      <td>{tenant.contact}</td>
+                      <td>{tenant.address}</td>
+                      <td>{tenant.unit}</td>
+                      <td>
+                        <Badge variant={tenant.status === 'active' ? 'active' : 'archived'}>
+                          {tenant.status}
+                        </Badge>
+                      </td>
+                      <td>
+                        <div className="table-actions">
+                          <button className="action-btn action-btn-view" onClick={() => handleViewTenant(tenant)}>
+                            👁️
+                          </button>
+                          <button className="action-btn action-btn-edit" onClick={() => handleEditTenant(tenant)}>
+                            ✏️
+                          </button>
+                          <button className="action-btn action-btn-archive" onClick={() => handleArchiveTenant(tenant)}>
+                            📦
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* View Tenant Modal */}
+      <Modal
+        isOpen={viewModalOpen}
+        onClose={() => setViewModalOpen(false)}
+        title={selectedTenant ? `${selectedTenant.name} - Tenant Details` : 'Tenant Details'}
+      >
+        {selectedTenant && (
+          <div className="tenant-details">
+            <div className="info-grid">
+              <div className="info-card">
+                <div className="info-label">Name</div>
+                <div className="info-value">{selectedTenant.name}</div>
+              </div>
+              <div className="info-card">
+                <div className="info-label">Email</div>
+                <div className="info-value">{selectedTenant.email}</div>
+              </div>
+              <div className="info-card">
+                <div className="info-label">Contact</div>
+                <div className="info-value">{selectedTenant.contact}</div>
+              </div>
+              <div className="info-card">
+                <div className="info-label">Unit</div>
+                <div className="info-value">{selectedTenant.unit}</div>
+              </div>
+              <div className="info-card">
+                <div className="info-label">Address</div>
+                <div className="info-value">{selectedTenant.address}</div>
+              </div>
+              <div className="info-card">
+                <div className="info-label">Status</div>
+                <div className="info-value">
+                  <Badge variant={selectedTenant.status === 'active' ? 'active' : 'archived'}>
+                    {selectedTenant.status}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <h3 className="section-title">Payment History</h3>
+            <div className="payment-history-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Payment Date</th>
+                    <th>Monthly Rent</th>
+                    <th>Payment Method</th>
+                    <th>Billing Period</th>
+                    <th>Balance</th>
+                    <th>Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedTenant.paymentHistory.map((payment, index) => (
+                    <tr key={index}>
+                      <td>{payment.date}</td>
+                      <td>₱{payment.monthlyRent.toLocaleString()}</td>
+                      <td>{payment.method}</td>
+                      <td>{payment.period}</td>
+                      <td>₱{payment.balance}</td>
+                      <td>
+                        <Badge variant={getRemarksBadge(payment.remarks)}>
+                          {payment.remarks}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Archive Confirmation Modal */}
+      <Modal
+        isOpen={archiveConfirmOpen}
+        onClose={() => setArchiveConfirmOpen(false)}
+        title="Confirm Archive"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setArchiveConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={confirmArchive}>
+              Archive
+            </Button>
+          </>
+        }
+      >
+        <p>Are you sure you want to archive {tenantToArchive?.name}?</p>
+      </Modal>
+    </div>
+  );
+}
