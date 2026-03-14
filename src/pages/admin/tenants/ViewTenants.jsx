@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, UserPlus, Eye, Edit2, Archive, ArrowUpDown } from 'lucide-react';
 import Sidebar from '../../../components/layout/Sidebar';
@@ -6,13 +6,15 @@ import Topbar from '../../../components/layout/Topbar';
 import Badge from '../../../components/ui/Badge';
 import Modal from '../../../components/ui/Modal';
 import Button from '../../../components/ui/Button';
-import { mockTenants as initialMockTenants } from '../../../data/mockData';
+import Toast from '../../../components/ui/Toast';
+import { getTenants, archiveTenant } from '../../../services/database';
 import { getRemarksBadgeVariant } from '../../../utils';
 import { ROUTES } from '../../../constants';
 import './ViewTenants.css';
 
 export default function ViewTenants() {
-  const [tenants, setTenants] = useState(initialMockTenants);
+  const [tenants, setTenants] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showEntries, setShowEntries] = useState(3);
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,7 +24,43 @@ export default function ViewTenants() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [tenantToArchive, setTenantToArchive] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchTenants();
+  }, []);
+
+  const fetchTenants = async () => {
+    try {
+      setLoading(true);
+      const data = await getTenants();
+      // Format data to match frontend expectations
+      const formattedData = data.map(tenant => ({
+        ...tenant,
+        name: tenant.full_name,
+        unit: tenant.unit?.name || 'N/A',
+        paymentHistory: tenant.rent_payments?.map(payment => ({
+          date: new Date(payment.payment_date || payment.due_date).toLocaleDateString(),
+          monthlyRent: parseFloat(payment.amount),
+          method: payment.payment_method || 'N/A',
+          period: payment.billing_period,
+          balance: parseFloat(payment.balance || 0),
+          remarks: payment.remarks || payment.status
+        })) || []
+      }));
+      setTenants(formattedData);
+    } catch (error) {
+      console.error('Error fetching tenants:', error);
+      showToast('Failed to load tenants', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+  };
 
   const filteredTenants = tenants.filter(tenant =>
     tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -53,12 +91,17 @@ export default function ViewTenants() {
     setArchiveConfirmOpen(true);
   };
 
-  const confirmArchive = () => {
-    setTenants(tenants.map(t =>
-      t.id === tenantToArchive.id ? { ...t, status: 'archived' } : t
-    ));
-    setArchiveConfirmOpen(false);
-    setTenantToArchive(null);
+  const confirmArchive = async () => {
+    try {
+      await archiveTenant(tenantToArchive.id);
+      await fetchTenants();
+      showToast('Tenant archived successfully');
+      setArchiveConfirmOpen(false);
+      setTenantToArchive(null);
+    } catch (error) {
+      console.error('Error archiving tenant:', error);
+      showToast('Failed to archive tenant', 'error');
+    }
   };
 
   const getRemarksBadge = (remarks) => {
@@ -104,7 +147,10 @@ export default function ViewTenants() {
             </div>
 
             <div className="table-wrapper">
-              <table className="tenants-table">
+              {loading ? (
+                <div className="loading-state">Loading tenants...</div>
+              ) : (
+                <table className="tenants-table">
                 <thead>
                   <tr>
                     <th className="sortable" onClick={() => handleSort('username')}>
@@ -158,6 +204,7 @@ export default function ViewTenants() {
                   ))}
                 </tbody>
               </table>
+              )}
             </div>
           </div>
         </div>
@@ -255,6 +302,13 @@ export default function ViewTenants() {
       >
         <p>Are you sure you want to archive {tenantToArchive?.name}?</p>
       </Modal>
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
     </div>
   );
 }

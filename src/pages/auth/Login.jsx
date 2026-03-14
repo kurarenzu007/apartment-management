@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../constants';
 import { Building2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import './Login.css';
 
 export default function Login() {
@@ -36,7 +37,7 @@ export default function Login() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!validateLoginForm()) {
@@ -45,18 +46,32 @@ export default function Login() {
 
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-      
-      // Check credentials
-      if (email === CREDENTIALS.ADMIN.email && password === CREDENTIALS.ADMIN.password) {
+    try {
+      // Attempt to sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        setErrors({ email: 'Invalid email or password' });
+        setLoading(false);
+        return;
+      }
+
+      // Check user role and redirect accordingly
+      if (email === CREDENTIALS.ADMIN.email) {
         navigate(CREDENTIALS.ADMIN.route);
-      } else if (email === CREDENTIALS.TENANT.email && password === CREDENTIALS.TENANT.password) {
+      } else if (email === CREDENTIALS.TENANT.email) {
         navigate(CREDENTIALS.TENANT.route);
       } else {
-        setErrors({ email: 'Invalid email or password' });
+        // Default to admin dashboard for other authenticated users
+        navigate(ROUTES.ADMIN_DASHBOARD);
       }
-    }, 600);
+    } catch (err) {
+      setErrors({ email: 'An error occurred. Please try again.' });
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = (e) => {

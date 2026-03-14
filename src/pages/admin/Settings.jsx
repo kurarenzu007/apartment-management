@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import Sidebar from '../../components/layout/Sidebar';
 import Topbar from '../../components/layout/Topbar';
 import Toast from '../../components/ui/Toast';
@@ -21,6 +22,7 @@ const mockAccounts = [
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [activeSection, setActiveSection] = useState('profile');
   const [logoPreview, setLogoPreview] = useState(null);
   const [profileForm, setProfileForm] = useState({
@@ -143,6 +145,7 @@ export default function Settings() {
   }
 
   function confirmLogout() {
+    signOut();
     navigate(ROUTES.LOGIN);
   }
 

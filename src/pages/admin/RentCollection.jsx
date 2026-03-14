@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import Topbar from '../../components/layout/Topbar';
 import Toast from '../../components/ui/Toast';
+import { getRentPayments, markPaymentAsPaid } from '../../services/database';
 import { 
   DollarSign, Clock, AlertCircle, Download, Search, 
   CheckCircle, Send, Eye, Calendar, CreditCard, 
@@ -9,21 +10,11 @@ import {
 } from 'lucide-react';
 import './RentCollection.css';
 
-const mockRentRecords = [
-  { id: 1, tenantName: 'Ten Nant', initials: 'TN', unit: 'Apartment 1', billingPeriod: 'January 2026', amountDue: 5500, amountPaid: 5500, dueDate: '01/01/2026', datePaid: '01/01/2026', paymentMethod: 'Cash', balance: 0, status: 'paid' },
-  { id: 2, tenantName: 'Nan Tent', initials: 'NT', unit: 'Apartment 24', billingPeriod: 'January 2026', amountDue: 4000, amountPaid: 0, dueDate: '01/01/2026', datePaid: null, paymentMethod: null, balance: 4000, status: 'missed' },
-  { id: 3, tenantName: 'Mike Conley', initials: 'MC', unit: 'House 2', billingPeriod: 'January 2026', amountDue: 11500, amountPaid: 0, dueDate: '12/31/2025', datePaid: null, paymentMethod: null, balance: 11500, status: 'overdue' },
-  { id: 4, tenantName: 'Smith Don', initials: 'SD', unit: 'Apartment A-1', billingPeriod: 'January 2026', amountDue: 2500, amountPaid: 2500, dueDate: '12/12/2025', datePaid: '12/12/2025', paymentMethod: 'GCash', balance: 0, status: 'paid' },
-  { id: 5, tenantName: 'John Doe', initials: 'JD', unit: 'Apartment A-14', billingPeriod: 'January 2026', amountDue: 3000, amountPaid: 2000, dueDate: '01/15/2026', datePaid: null, paymentMethod: 'Bank Transfer', balance: 1000, status: 'partial' },
-  { id: 6, tenantName: 'Ana Reyes', initials: 'AR', unit: 'Room 1', billingPeriod: 'January 2026', amountDue: 2220, amountPaid: 0, dueDate: '01/05/2026', datePaid: null, paymentMethod: null, balance: 2220, status: 'pending' },
-];
-
 const AVATAR_COLORS = ['teal', 'blue', 'purple', 'orange', 'green'];
-const MONTHS = ['January 2026', 'February 2026', 'March 2026', 'April 2026', 'May 2026', 'June 2026'];
 const REMARK_CHIPS = ['Paid On Time', 'Late Payment', 'Partial Payment', 'Final Payment'];
 
 function fmt(amount) {
-  return '₱' + amount.toLocaleString('en-PH');
+  return '₱' + parseFloat(amount).toLocaleString('en-PH');
 }
 
 function todayStr() {
@@ -41,7 +32,6 @@ export default function RentCollection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showEntries, setShowEntries] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedMonth, setSelectedMonth] = useState('January 2026');
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [markPaidModalOpen, setMarkPaidModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -49,11 +39,33 @@ export default function RentCollection() {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    setTimeout(() => {
-      setRecords(mockRentRecords);
-      setLoading(false);
-    }, 800);
+    fetchRentPayments();
   }, []);
+
+  async function fetchRentPayments() {
+    try {
+      setLoading(true);
+      const data = await getRentPayments();
+      // Format data with initials
+      const formatted = data.map(record => ({
+        ...record,
+        initials: record.tenantName?.split(' ').map(n => n[0]).join('').toUpperCase() || '??',
+        unit: record.unitName,
+        amountDue: parseFloat(record.amount),
+        amountPaid: record.status === 'paid' ? parseFloat(record.amount) : 0,
+        dueDate: new Date(record.dueDate).toLocaleDateString(),
+        datePaid: record.paymentDate ? new Date(record.paymentDate).toLocaleDateString() : null,
+        balance: parseFloat(record.balance || 0),
+        billingPeriod: record.billing_period
+      }));
+      setRecords(formatted);
+    } catch (error) {
+      console.error('Error fetching rent payments:', error);
+      showToast('Failed to load rent payments', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function showToast(message, type = 'success') {
     setToast({ show: true, message, type });
@@ -72,9 +84,8 @@ export default function RentCollection() {
   function filterRecords() {
     return records.filter(r => {
       const matchFilter = activeFilter === 'all' || r.status === activeFilter;
-      const matchSearch = r.tenantName.toLowerCase().includes(searchQuery.toLowerCase()) || r.unit.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchMonth = r.billingPeriod === selectedMonth;
-      return matchFilter && matchSearch && matchMonth;
+      const matchSearch = r.tenantName?.toLowerCase().includes(searchQuery.toLowerCase()) || r.unit?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchFilter && matchSearch;
     });
   }
 
@@ -97,22 +108,25 @@ export default function RentCollection() {
     setPaymentForm(prev => ({ ...prev, remarks: remark }));
   }
 
-  function handleConfirmPayment() {
+  async function handleConfirmPayment() {
     if (!paymentForm.amountPaid || !paymentForm.method || !paymentForm.datePaid) {
       showToast('Please fill in all required fields.', 'error');
       return;
     }
-    const paid = parseFloat(paymentForm.amountPaid);
-    setRecords(prev => prev.map(r => {
-      if (r.id !== selectedRecord.id) return r;
-      const newPaid = r.amountPaid + paid;
-      const newBalance = Math.max(0, r.amountDue - newPaid);
-      const newStatus = newBalance === 0 ? 'paid' : 'partial';
-      const [y, m, d] = paymentForm.datePaid.split('-');
-      return { ...r, amountPaid: newPaid, balance: newBalance, status: newStatus, paymentMethod: paymentForm.method, datePaid: `${m}/${d}/${y}` };
-    }));
-    showToast(`Payment recorded for ${selectedRecord.tenantName}.`, 'success');
-    setMarkPaidModalOpen(false);
+    
+    try {
+      await markPaymentAsPaid(selectedRecord.id, {
+        paymentDate: paymentForm.datePaid,
+        paymentMethod: paymentForm.method
+      });
+      
+      await fetchRentPayments();
+      showToast(`Payment recorded for ${selectedRecord.tenantName}.`, 'success');
+      setMarkPaidModalOpen(false);
+    } catch (error) {
+      console.error('Error marking payment:', error);
+      showToast('Failed to record payment', 'error');
+    }
   }
 
   function handleSendReminder(record) {

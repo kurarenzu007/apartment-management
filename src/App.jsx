@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/admin/Dashboard';
 import ViewTenants from './pages/admin/tenants/ViewTenants';
@@ -14,27 +15,29 @@ import './App.css';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path={ROUTES.LOGIN} element={<Login />} />
-        <Route path={ROUTES.ADMIN_DASHBOARD} element={<Dashboard />} />
-        <Route path={ROUTES.ADMIN_TENANTS} element={<ViewTenants />} />
-        <Route path={ROUTES.ADMIN_TENANTS_ADD} element={<AddTenant />} />
-        <Route path={ROUTES.ADMIN_UNITS} element={<Units />} />
-        <Route path={ROUTES.ADMIN_OWNER} element={<PlaceholderPage title="Owner Info" />} />
-        <Route path={ROUTES.ADMIN_RENT} element={<RentCollection />} />
-        <Route path={ROUTES.ADMIN_MAINTENANCE} element={<Maintenance />} />
-        <Route path={ROUTES.ADMIN_COMPLAINTS} element={<Complaints />} />
-        <Route path={ROUTES.ADMIN_REPORTS} element={<Reports />} />
-        <Route path={ROUTES.ADMIN_SETTINGS} element={<Settings />} />
-        
-        {/* Tenant dashboard placeholder */}
-        <Route path={ROUTES.TENANT_DASHBOARD} element={<PlaceholderPage title="Tenant Dashboard" />} />
-        
-        {/* Catch all - redirect to login */}
-        <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path={ROUTES.LOGIN} element={<Login />} />
+          <Route path={ROUTES.ADMIN_DASHBOARD} element={<Dashboard />} />
+          <Route path={ROUTES.ADMIN_TENANTS} element={<ViewTenants />} />
+          <Route path={ROUTES.ADMIN_TENANTS_ADD} element={<AddTenant />} />
+          <Route path={ROUTES.ADMIN_UNITS} element={<Units />} />
+          <Route path={ROUTES.ADMIN_OWNER} element={<PlaceholderPage title="Owner Info" />} />
+          <Route path={ROUTES.ADMIN_RENT} element={<RentCollection />} />
+          <Route path={ROUTES.ADMIN_MAINTENANCE} element={<Maintenance />} />
+          <Route path={ROUTES.ADMIN_COMPLAINTS} element={<Complaints />} />
+          <Route path={ROUTES.ADMIN_REPORTS} element={<Reports />} />
+          <Route path={ROUTES.ADMIN_SETTINGS} element={<Settings />} />
+          
+          {/* Tenant dashboard placeholder */}
+          <Route path={ROUTES.TENANT_DASHBOARD} element={<PlaceholderPage title="Tenant Dashboard" />} />
+          
+          {/* Catch all - redirect to login */}
+          <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

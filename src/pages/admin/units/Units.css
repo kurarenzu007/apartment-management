@@ -317,3 +317,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 16px;
+}

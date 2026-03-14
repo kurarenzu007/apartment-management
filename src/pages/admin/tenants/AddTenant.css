@@ -166,3 +166,11 @@
     margin: 0;
   }
 }
+
+
+.info-message {
+  color: var(--primary);
+  font-size: 12px;
+  margin-top: 4px;
+  font-style: italic;
+}

@@ -1,16 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ArrowRight, ArrowLeft } from 'lucide-react';
 import Sidebar from '../../../components/layout/Sidebar';
 import Topbar from '../../../components/layout/Topbar';
 import Button from '../../../components/ui/Button';
+import Toast from '../../../components/ui/Toast';
 import { APARTMENT_TYPES, DURATION_OPTIONS, ROUTES } from '../../../constants';
 import { validateEmail, validatePhoneNumber, isAdult } from '../../../utils';
+import { createTenant, getUnits } from '../../../services/database';
+import { supabase } from '../../../lib/supabase';
 import './AddTenant.css';
 
 export default function AddTenant() {
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [availableUnits, setAvailableUnits] = useState([]);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const navigate = useNavigate();
 
   // Step 1: Personal Information
@@ -19,10 +25,37 @@ export default function AddTenant() {
   const [contact, setContact] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [occupation, setOccupation] = useState('');
+  const [address, setAddress] = useState('');
 
   // Step 2: Stay Details
   const [apartmentType, setApartmentType] = useState('');
   const [duration, setDuration] = useState('');
+  const [selectedUnit, setSelectedUnit] = useState('');
+  const [moveInDate, setMoveInDate] = useState('');
+
+  // Step 3: Account Setup
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  useEffect(() => {
+    fetchAvailableUnits();
+  }, []);
+
+  const fetchAvailableUnits = async () => {
+    try {
+      const units = await getUnits();
+      // Filter only vacant units
+      const vacant = units.filter(u => u.status === 'vacant');
+      setAvailableUnits(vacant);
+    } catch (error) {
+      console.error('Error fetching units:', error);
+    }
+  };
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+  };
 
   // Step 3: Account Setup
   const [username, setUsername] = useState('');
@@ -69,6 +102,14 @@ export default function AddTenant() {
       newErrors.duration = 'Duration of stay is required';
     }
 
+    if (!selectedUnit) {
+      newErrors.selectedUnit = 'Please select a unit';
+    }
+
+    if (!moveInDate) {
+      newErrors.moveInDate = 'Move-in date is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -105,11 +146,64 @@ export default function AddTenant() {
     setErrors({});
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateStep3()) {
-      alert('Tenant added successfully!');
-      navigate(ROUTES.ADMIN_TENANTS);
+    if (!validateStep3()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Step 1: Create Supabase auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            full_name: fullName,
+            role: 'tenant'
+          }
+        }
+      });
+
+      if (authError) throw authError;
+
+      // Step 2: Create tenant record in database
+      const tenantData = {
+        user_id: authData.user?.id,
+        username: username,
+        full_name: fullName,
+        email: email,
+        contact: contact,
+        address: address || '',
+        date_of_birth: dateOfBirth,
+        occupation: occupation || '',
+        unit_id: selectedUnit,
+        status: 'active',
+        move_in_date: moveInDate,
+        contract_duration: duration
+      };
+
+      await createTenant(tenantData);
+
+      // Step 3: Update unit status to occupied
+      await supabase
+        .from('units')
+        .update({ status: 'occupied' })
+        .eq('id', selectedUnit);
+
+      showToast('Tenant added successfully!', 'success');
+      
+      setTimeout(() => {
+        navigate(ROUTES.ADMIN_TENANTS);
+      }, 1500);
+
+    } catch (error) {
+      console.error('Error creating tenant:', error);
+      showToast(error.message || 'Failed to add tenant', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -203,6 +297,17 @@ export default function AddTenant() {
                       />
                       {errors.contact && <div className="error-message">{errors.contact}</div>}
                     </div>
+
+                    <div className="form-group form-group-full">
+                      <label className="form-label">Address</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Enter address (optional)"
+                      />
+                    </div>
                   </div>
 
                   <div className="form-actions">
@@ -246,6 +351,37 @@ export default function AddTenant() {
                         ))}
                       </select>
                       {errors.duration && <div className="error-message">{errors.duration}</div>}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Select Unit *</label>
+                      <select
+                        className={`form-input ${errors.selectedUnit ? 'error' : ''}`}
+                        value={selectedUnit}
+                        onChange={(e) => setSelectedUnit(e.target.value)}
+                      >
+                        <option value="">-- Select Unit --</option>
+                        {availableUnits.map(unit => (
+                          <option key={unit.id} value={unit.id}>
+                            {unit.name} - {unit.location} (₱{unit.rentalFee.toLocaleString()}/month)
+                          </option>
+                        ))}
+                      </select>
+                      {errors.selectedUnit && <div className="error-message">{errors.selectedUnit}</div>}
+                      {availableUnits.length === 0 && (
+                        <div className="info-message">No vacant units available</div>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Move-in Date *</label>
+                      <input
+                        type="date"
+                        className={`form-input ${errors.moveInDate ? 'error' : ''}`}
+                        value={moveInDate}
+                        onChange={(e) => setMoveInDate(e.target.value)}
+                      />
+                      {errors.moveInDate && <div className="error-message">{errors.moveInDate}</div>}
                     </div>
                   </div>
 
@@ -308,9 +444,9 @@ export default function AddTenant() {
                       <ArrowLeft size={16} />
                       Back
                     </Button>
-                    <Button type="submit" variant="primary">
+                    <Button type="submit" variant="primary" disabled={loading}>
                       <Check size={16} />
-                      Submit
+                      {loading ? 'Creating...' : 'Submit'}
                     </Button>
                   </div>
                 </div>
@@ -319,6 +455,13 @@ export default function AddTenant() {
           </div>
         </div>
       </div>
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
     </div>
   );
 }

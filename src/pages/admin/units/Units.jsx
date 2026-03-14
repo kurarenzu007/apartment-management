@@ -1,26 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Eye, Edit2, Archive, ArrowUpDown, Home } from 'lucide-react';
 import { Sidebar, Topbar } from '../../../components/layout';
-import { Badge, Modal, Button } from '../../../components/ui';
+import { Badge, Modal, Button, Toast } from '../../../components/ui';
+import { getUnits, updateUnit } from '../../../services/database';
 import { ROUTES } from '../../../constants';
 import './Units.css';
 
-const mockUnits = [
-  { id: 1, name: 'Apartment 1', location: 'Building A - Floor 1', rentalFee: 5500, status: 'occupied', tenant: 'Ten Nant' },
-  { id: 2, name: 'Apartment 24', location: 'Building A - Floor 2', rentalFee: 4000, status: 'occupied', tenant: 'Nan Tent' },
-  { id: 3, name: 'House 2', location: 'Building B', rentalFee: 11500, status: 'occupied', tenant: 'Mike Conley' },
-  { id: 4, name: 'Apartment A-1', location: 'Building A - Floor 1', rentalFee: 2500, status: 'occupied', tenant: 'Smith Don' },
-  { id: 5, name: 'Apartment A-14', location: 'Building A - Floor 1', rentalFee: 3000, status: 'occupied', tenant: 'John Doe' },
-  { id: 6, name: 'Room 1', location: 'Building C - Floor 1', rentalFee: 2220, status: 'occupied', tenant: 'Ana Reyes' },
-  { id: 7, name: 'Apartment 5', location: 'Building A - Floor 1', rentalFee: 5000, status: 'vacant', tenant: null },
-  { id: 8, name: 'Apartment 12', location: 'Building A - Floor 2', rentalFee: 4500, status: 'vacant', tenant: null },
-  { id: 9, name: 'Studio 3', location: 'Building D - Floor 3', rentalFee: 6000, status: 'maintenance', tenant: null },
-  { id: 10, name: 'Room 5', location: 'Building C - Floor 2', rentalFee: 2500, status: 'vacant', tenant: null },
-];
-
 export default function Units() {
-  const [units, setUnits] = useState(mockUnits);
+  const [units, setUnits] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showEntries, setShowEntries] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,7 +19,29 @@ export default function Units() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [unitToArchive, setUnitToArchive] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchUnits();
+  }, []);
+
+  const fetchUnits = async () => {
+    try {
+      setLoading(true);
+      const data = await getUnits();
+      setUnits(data);
+    } catch (error) {
+      console.error('Error fetching units:', error);
+      showToast('Failed to load units', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+  };
 
   const filteredUnits = units.filter(unit =>
     unit.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -61,12 +72,17 @@ export default function Units() {
     setArchiveConfirmOpen(true);
   };
 
-  const confirmArchive = () => {
-    setUnits(units.map(u =>
-      u.id === unitToArchive.id ? { ...u, status: 'archived' } : u
-    ));
-    setArchiveConfirmOpen(false);
-    setUnitToArchive(null);
+  const confirmArchive = async () => {
+    try {
+      await updateUnit(unitToArchive.id, { status: 'archived' });
+      await fetchUnits();
+      showToast('Unit archived successfully');
+      setArchiveConfirmOpen(false);
+      setUnitToArchive(null);
+    } catch (error) {
+      console.error('Error archiving unit:', error);
+      showToast('Failed to archive unit', 'error');
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -118,7 +134,10 @@ export default function Units() {
             </div>
 
             <div className="table-wrapper">
-              <table className="units-table">
+              {loading ? (
+                <div className="loading-state">Loading units...</div>
+              ) : (
+                <table className="units-table">
                 <thead>
                   <tr>
                     <th className="sortable" onClick={() => handleSort('name')}>
@@ -176,6 +195,7 @@ export default function Units() {
                   ))}
                 </tbody>
               </table>
+              )}
             </div>
 
             {filteredUnits.length === 0 && (
@@ -244,6 +264,13 @@ export default function Units() {
       >
         <p>Are you sure you want to archive {unitToArchive?.name}?</p>
       </Modal>
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.show}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
     </div>
   );
 }
