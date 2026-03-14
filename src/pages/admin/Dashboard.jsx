@@ -4,6 +4,7 @@ import Topbar from '../../components/layout/Topbar';
 import StatCard from '../../components/ui/StatCard';
 import Badge from '../../components/ui/Badge';
 import { mockStats, mockUpcomingDues, mockExceededDues } from '../../data/mockData';
+import { Building2, Home, BedDouble, Users, DollarSign, CheckCircle, Wrench, MessageSquare, Search, Printer, ChevronLeft, ChevronRight } from 'lucide-react';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -29,14 +30,14 @@ export default function Dashboard() {
         <Topbar title="Dashboard" />
         <div className="page-content animate-fade-in">
           <div className="stats-grid">
-            <StatCard icon="🏢" label="Total Apartment" value="24" color="teal" />
-            <StatCard icon="🏠" label="Total House" value="2" color="blue" />
-            <StatCard icon="🛏️" label="Total Vacancies" value="8" color="orange" />
-            <StatCard icon="👥" label="Total Tenant" value="18" color="purple" />
-            <StatCard icon="💰" label="Total Rent Collection" value="₱101,000" color="green" />
-            <StatCard icon="✅" label="Payment Collected" value="2" color="teal" />
-            <StatCard icon="🔧" label="Maintenance" value="0" color="yellow" />
-            <StatCard icon="💬" label="Total Complain" value="3" color="red" />
+            <StatCard icon={<Building2 size={22} />} label="Total Apartment" value="24" color="teal" />
+            <StatCard icon={<Home size={22} />} label="Total House" value="2" color="blue" />
+            <StatCard icon={<BedDouble size={22} />} label="Total Vacancies" value="8" color="orange" />
+            <StatCard icon={<Users size={22} />} label="Total Tenant" value="18" color="purple" />
+            <StatCard icon={<DollarSign size={22} />} label="Total Rent Collection" value="₱101,000" color="green" />
+            <StatCard icon={<CheckCircle size={22} />} label="Payment Collected" value="2" color="teal" />
+            <StatCard icon={<Wrench size={22} />} label="Maintenance" value="0" color="yellow" />
+            <StatCard icon={<MessageSquare size={22} />} label="Total Complain" value="3" color="red" />
           </div>
 
           <div className="dues-section">
@@ -56,15 +57,19 @@ export default function Dashboard() {
             </div>
 
             <div className="table-header">
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Search by tenant or unit..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+              <div className="search-wrap">
+                <Search size={18} className="search-icon" />
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Search by tenant or unit..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
               <button className="print-btn" onClick={handlePrintGraph}>
-                🖨️ Print
+                <Printer size={16} />
+                Print
               </button>
             </div>
 
@@ -98,9 +103,13 @@ export default function Dashboard() {
             </div>
 
             <div className="pagination">
-              <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>←</button>
+              <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
+                <ChevronLeft size={16} />
+              </button>
               <span>Page {currentPage} of 2</span>
-              <button onClick={() => setCurrentPage(Math.min(2, currentPage + 1))}>→</button>
+              <button onClick={() => setCurrentPage(Math.min(2, currentPage + 1))}>
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, Plus, Eye, Edit2, Archive, ArrowUpDown, Home } from 'lucide-react';
 import { Sidebar, Topbar } from '../../../components/layout';
 import { Badge, Modal, Button } from '../../../components/ui';
 import { ROUTES } from '../../../constants';
@@ -83,7 +84,7 @@ export default function Units() {
       <Sidebar />
       <div className="main-content">
         <Topbar title="Unit Management" />
-        <div className="page-content animate-fade-in">
+        <div className="page-content">
           <div className="breadcrumb">Home &gt; Units</div>
 
           <div className="units-container">
@@ -99,15 +100,19 @@ export default function Units() {
               </div>
 
               <div className="header-actions">
-                <input
-                  type="text"
-                  className="search-input"
-                  placeholder="🔍 Search units..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <button className="add-unit-btn hover-lift" onClick={() => alert('Add Unit - Coming soon!')}>
-                  ➕ Add Unit
+                <div className="search-box">
+                  <Search size={18} />
+                  <input
+                    type="text"
+                    className="search-input"
+                    placeholder="Search units..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <button className="add-unit-btn" onClick={() => alert('Add Unit - Coming soon!')}>
+                  <Plus size={18} />
+                  Add Unit
                 </button>
               </div>
             </div>
@@ -117,13 +122,22 @@ export default function Units() {
                 <thead>
                   <tr>
                     <th className="sortable" onClick={() => handleSort('name')}>
-                      Unit Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <div className="th-content">
+                        Unit Name
+                        <ArrowUpDown size={14} />
+                      </div>
                     </th>
                     <th className="sortable" onClick={() => handleSort('location')}>
-                      Location {sortField === 'location' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <div className="th-content">
+                        Location
+                        <ArrowUpDown size={14} />
+                      </div>
                     </th>
                     <th className="sortable" onClick={() => handleSort('rentalFee')}>
-                      Rental Fee {sortField === 'rentalFee' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <div className="th-content">
+                        Rental Fee
+                        <ArrowUpDown size={14} />
+                      </div>
                     </th>
                     <th>Current Tenant</th>
                     <th>Status</th>
@@ -131,10 +145,10 @@ export default function Units() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUnits.slice(0, showEntries).map((unit, index) => (
-                    <tr key={unit.id} style={{ animationDelay: `${index * 0.05}s` }} className="animate-fade-in">
+                  {filteredUnits.slice(0, showEntries).map((unit) => (
+                    <tr key={unit.id}>
                       <td className="unit-name">
-                        <span className="unit-icon">🏠</span>
+                        <Home size={18} className="unit-icon" />
                         {unit.name}
                       </td>
                       <td>{unit.location}</td>
@@ -147,14 +161,14 @@ export default function Units() {
                       </td>
                       <td>
                         <div className="table-actions">
-                          <button className="action-btn action-btn-view hover-scale" onClick={() => handleViewUnit(unit)} title="View Details">
-                            👁️
+                          <button className="action-btn action-btn-view" onClick={() => handleViewUnit(unit)} title="View Details">
+                            <Eye size={16} />
                           </button>
-                          <button className="action-btn action-btn-edit hover-scale" onClick={() => handleEditUnit(unit)} title="Edit Unit">
-                            ✏️
+                          <button className="action-btn action-btn-edit" onClick={() => handleEditUnit(unit)} title="Edit Unit">
+                            <Edit2 size={16} />
                           </button>
-                          <button className="action-btn action-btn-archive hover-scale" onClick={() => handleArchiveUnit(unit)} title="Archive Unit">
-                            📦
+                          <button className="action-btn action-btn-archive" onClick={() => handleArchiveUnit(unit)} title="Archive">
+                            <Archive size={16} />
                           </button>
                         </div>
                       </td>
@@ -166,7 +180,7 @@ export default function Units() {
 
             {filteredUnits.length === 0 && (
               <div className="empty-state">
-                <div className="empty-icon">🏢</div>
+                <Home size={64} className="empty-icon" />
                 <p>No units found</p>
               </div>
             )}
@@ -183,19 +197,19 @@ export default function Units() {
         {selectedUnit && (
           <div className="unit-details">
             <div className="info-grid">
-              <div className="info-card animate-scale-in">
+              <div className="info-card">
                 <div className="info-label">Unit Name</div>
                 <div className="info-value">{selectedUnit.name}</div>
               </div>
-              <div className="info-card animate-scale-in" style={{ animationDelay: '0.1s' }}>
+              <div className="info-card">
                 <div className="info-label">Location</div>
                 <div className="info-value">{selectedUnit.location}</div>
               </div>
-              <div className="info-card animate-scale-in" style={{ animationDelay: '0.2s' }}>
+              <div className="info-card">
                 <div className="info-label">Rental Fee</div>
                 <div className="info-value">₱{selectedUnit.rentalFee.toLocaleString()}/month</div>
               </div>
-              <div className="info-card animate-scale-in" style={{ animationDelay: '0.3s' }}>
+              <div className="info-card">
                 <div className="info-label">Status</div>
                 <div className="info-value">
                   <Badge variant={getStatusBadge(selectedUnit.status)}>
@@ -203,7 +217,7 @@ export default function Units() {
                   </Badge>
                 </div>
               </div>
-              <div className="info-card animate-scale-in" style={{ animationDelay: '0.4s' }}>
+              <div className="info-card">
                 <div className="info-label">Current Tenant</div>
                 <div className="info-value">{selectedUnit.tenant || 'Vacant'}</div>
               </div>

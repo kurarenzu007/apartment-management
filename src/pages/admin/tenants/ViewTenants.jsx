@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, UserPlus, Eye, Edit2, Archive, ArrowUpDown } from 'lucide-react';
 import Sidebar from '../../../components/layout/Sidebar';
 import Topbar from '../../../components/layout/Topbar';
 import Badge from '../../../components/ui/Badge';
@@ -85,15 +86,19 @@ export default function ViewTenants() {
               </div>
 
               <div className="header-actions">
-                <input
-                  type="text"
-                  className="search-input"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                <div className="search-box">
+                  <Search size={18} />
+                  <input
+                    type="text"
+                    className="search-input"
+                    placeholder="Search tenants..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
                 <button className="add-tenant-btn" onClick={() => navigate(ROUTES.ADMIN_TENANTS_ADD)}>
-                  ➕ Add Tenant
+                  <UserPlus size={18} />
+                  Add Tenant
                 </button>
               </div>
             </div>
@@ -103,10 +108,16 @@ export default function ViewTenants() {
                 <thead>
                   <tr>
                     <th className="sortable" onClick={() => handleSort('username')}>
-                      Username {sortField === 'username' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <div className="th-content">
+                        Username
+                        <ArrowUpDown size={14} />
+                      </div>
                     </th>
                     <th className="sortable" onClick={() => handleSort('name')}>
-                      Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <div className="th-content">
+                        Name
+                        <ArrowUpDown size={14} />
+                      </div>
                     </th>
                     <th>Email</th>
                     <th>Contact</th>
@@ -132,14 +143,14 @@ export default function ViewTenants() {
                       </td>
                       <td>
                         <div className="table-actions">
-                          <button className="action-btn action-btn-view" onClick={() => handleViewTenant(tenant)}>
-                            👁️
+                          <button className="action-btn action-btn-view" onClick={() => handleViewTenant(tenant)} title="View Details">
+                            <Eye size={16} />
                           </button>
-                          <button className="action-btn action-btn-edit" onClick={() => handleEditTenant(tenant)}>
-                            ✏️
+                          <button className="action-btn action-btn-edit" onClick={() => handleEditTenant(tenant)} title="Edit Tenant">
+                            <Edit2 size={16} />
                           </button>
-                          <button className="action-btn action-btn-archive" onClick={() => handleArchiveTenant(tenant)}>
-                            📦
+                          <button className="action-btn action-btn-archive" onClick={() => handleArchiveTenant(tenant)} title="Archive">
+                            <Archive size={16} />
                           </button>
                         </div>
                       </td>

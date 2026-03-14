@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Check, ArrowRight, ArrowLeft } from 'lucide-react';
 import Sidebar from '../../../components/layout/Sidebar';
 import Topbar from '../../../components/layout/Topbar';
 import Button from '../../../components/ui/Button';
@@ -121,12 +122,16 @@ export default function AddTenant() {
           <div className="add-tenant-container">
             <div className="step-indicator">
               <div className={`step ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
-                <div className="step-circle">{currentStep > 1 ? '✓' : '1'}</div>
+                <div className="step-circle">
+                  {currentStep > 1 ? <Check size={20} /> : '1'}
+                </div>
                 <div className="step-label">Personal Info</div>
               </div>
               <div className={`step-line ${currentStep > 1 ? 'active' : ''}`}></div>
               <div className={`step ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
-                <div className="step-circle">{currentStep > 2 ? '✓' : '2'}</div>
+                <div className="step-circle">
+                  {currentStep > 2 ? <Check size={20} /> : '2'}
+                </div>
                 <div className="step-label">Stay Details</div>
               </div>
               <div className={`step-line ${currentStep > 2 ? 'active' : ''}`}></div>
@@ -202,7 +207,8 @@ export default function AddTenant() {
 
                   <div className="form-actions">
                     <Button type="button" variant="primary" onClick={handleNext}>
-                      Next →
+                      Next
+                      <ArrowRight size={16} />
                     </Button>
                   </div>
                 </div>
@@ -245,10 +251,12 @@ export default function AddTenant() {
 
                   <div className="form-actions">
                     <Button type="button" variant="outline" onClick={handleBack}>
-                      ← Back
+                      <ArrowLeft size={16} />
+                      Back
                     </Button>
                     <Button type="button" variant="primary" onClick={handleNext}>
-                      Next →
+                      Next
+                      <ArrowRight size={16} />
                     </Button>
                   </div>
                 </div>
@@ -297,9 +305,11 @@ export default function AddTenant() {
 
                   <div className="form-actions">
                     <Button type="button" variant="outline" onClick={handleBack}>
-                      ← Back
+                      <ArrowLeft size={16} />
+                      Back
                     </Button>
                     <Button type="submit" variant="primary">
+                      <Check size={16} />
                       Submit
                     </Button>
                   </div>

@@ -1,17 +1,22 @@
 .admin-layout {
   display: flex;
   min-height: 100vh;
+  background: var(--bg-main);
 }
 
 .main-content {
-  margin-left: 240px;
+  margin-left: 260px;
   flex: 1;
   background: var(--bg-main);
   min-height: 100vh;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .page-content {
-  padding: 24px;
+  padding: 28px 32px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .stats-grid {
@@ -92,15 +97,32 @@
   align-items: center;
   margin-bottom: 16px;
   gap: 16px;
+  flex-wrap: wrap;
+}
+
+.search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+  min-width: 200px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
 }
 
 .search-input {
-  flex: 1;
-  max-width: 300px;
-  padding: 10px 16px;
+  width: 100%;
+  padding: 10px 16px 10px 42px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 14px;
+  box-sizing: border-box;
 }
 
 .search-input:focus {
@@ -126,6 +148,7 @@
 .print-btn:hover {
   border-color: var(--primary);
   color: var(--primary);
+  background: var(--primary-light);
 }
 
 .dues-table {

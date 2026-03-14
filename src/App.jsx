@@ -4,6 +4,11 @@ import Dashboard from './pages/admin/Dashboard';
 import ViewTenants from './pages/admin/tenants/ViewTenants';
 import AddTenant from './pages/admin/tenants/AddTenant';
 import Units from './pages/admin/units/Units';
+import RentCollection from './pages/admin/RentCollection';
+import Maintenance from './pages/admin/Maintenance';
+import Complaints from './pages/admin/Complaints';
+import Reports from './pages/admin/Reports';
+import Settings from './pages/admin/Settings';
 import { ROUTES } from './constants';
 import './App.css';
 
@@ -17,11 +22,11 @@ function App() {
         <Route path={ROUTES.ADMIN_TENANTS_ADD} element={<AddTenant />} />
         <Route path={ROUTES.ADMIN_UNITS} element={<Units />} />
         <Route path={ROUTES.ADMIN_OWNER} element={<PlaceholderPage title="Owner Info" />} />
-        <Route path={ROUTES.ADMIN_RENT} element={<PlaceholderPage title="Rent Collection" />} />
-        <Route path={ROUTES.ADMIN_MAINTENANCE} element={<PlaceholderPage title="Maintenance" />} />
-        <Route path={ROUTES.ADMIN_COMPLAINTS} element={<PlaceholderPage title="Complaints" />} />
-        <Route path={ROUTES.ADMIN_REPORTS} element={<PlaceholderPage title="Reports" />} />
-        <Route path={ROUTES.ADMIN_SETTINGS} element={<PlaceholderPage title="Settings" />} />
+        <Route path={ROUTES.ADMIN_RENT} element={<RentCollection />} />
+        <Route path={ROUTES.ADMIN_MAINTENANCE} element={<Maintenance />} />
+        <Route path={ROUTES.ADMIN_COMPLAINTS} element={<Complaints />} />
+        <Route path={ROUTES.ADMIN_REPORTS} element={<Reports />} />
+        <Route path={ROUTES.ADMIN_SETTINGS} element={<Settings />} />
         
         {/* Tenant dashboard placeholder */}
         <Route path={ROUTES.TENANT_DASHBOARD} element={<PlaceholderPage title="Tenant Dashboard" />} />
